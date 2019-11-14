@@ -83,9 +83,9 @@ export class CalculatorsComponent implements OnInit {
   calculatorForm: FormGroup;
   calculators: ConditionTable[];
   calculatorsLoading: boolean = true;
-  prices: Array<{id: number, price: number}> = [];
-  names: Array<{id: number, name: string}> = [];
-  errors: Array<{id: number, error: string}> = [];
+  prices = [];
+  names = [];
+  errors = [];
 
   get conditionTables() { 
     return this.calculatorForm.get('conditionTables') as FormArray;
@@ -123,7 +123,9 @@ export class CalculatorsComponent implements OnInit {
   copyToClipboard(calculatorId) {
     console.log(calculatorId);
     document.addEventListener('copy', (e: ClipboardEvent) => {
-      e.clipboardData.setData('text/plain', ((Math.round(this.prices[calculatorId] * 100) /100).toLocaleString('de-DE')));
+      var price = this.prices[calculatorId];
+      var value = (Math.round(price * 100) /100).toLocaleString('de-DE');
+      e.clipboardData.setData('text/plain', value);
       e.preventDefault();
       document.removeEventListener('copy', null);
     });
