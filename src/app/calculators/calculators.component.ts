@@ -66,6 +66,20 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                   Gewicht kleiner als Minimum
                 </mat-error>
               </mat-form-field>
+              <div fxLayout="column" fxLayoutGap="10px">
+                <span *ngIf="errors.includes('lademeterLowerWeight')" class="warning">
+                  Lademeterpreis ist geringer als Preis nach Gewicht. Es wird deshalb der Preis nach Gewicht angzeigt, welcher höher ist.
+                </span>
+                <span *ngIf="errors.includes('weightTooHigh')" class="error">
+                  Gewicht oberhalb der Konditionen. Es wurde kein Komm-Preis gefunden.
+                </span>
+                <span *ngIf="errors.includes('weightTooLow')" class="error">
+                  Gewicht unterhalb der Konditionen. Es wurde kein Komm-Preis gefunden.
+                </span>
+                <span *ngIf="errors.includes('generic')" class="error">
+                  Unbekannter Fehler.
+                </span>
+              </div>
           </mat-card-content>
           <mat-card-actions align="end">
             <button type="submit" [disabled]="!calculatorForm.valid" mat-button tabindex="6">
@@ -96,7 +110,7 @@ export class CalculatorsComponent implements OnInit {
   ngOnInit() {
     this.calculatorForm = this.fb.group({
       postalCode: ['0', Validators.compose([Validators.required, Validators.minLength(2), Validators.maxLength(5)])],
-      lademeter: [null, Validators.compose([Validators.min(0), Validators.max(12)])],
+      lademeter: [null, Validators.compose([Validators.min(0), Validators.max(13.6)])],
       weight: [0, Validators.compose([Validators.min(0), Validators.max(40000), Validators.required])]
     });
 
@@ -135,21 +149,45 @@ export class CalculatorsComponent implements OnInit {
     });
   }
 
+  clearErrors() {
+    this.errors = [];
+    console.log('cleared');
+  }
+
   calculate() {
     // Fix me, asap
     var postalCode = this.calculatorForm.get('postalCode').value.substring(0, 2);
     var weight = this.calculatorForm.get('weight').value;
     var lademeter = this.calculatorForm.get('lademeter').value;
 
+    this.clearErrors();
+
+    if (lademeter != null && ((lademeter * 1000) < weight)) {
+      this.errors.push('lademeterLowerWeight');
+      lademeter = null;
+    }
+
     this.calculators.forEach(calculator => {
       this.restService.calculate(calculator, postalCode, weight, lademeter).subscribe(((result: {price: number, error: string}) => {
         console.log(result);
         this.prices[calculator.id] = result.price;
-        this.errors[calculator.id] = result.error;
+
+        switch (result.error) {
+          case 'WeightTooHigh':
+            this.errors.push('weightTooHigh');
+            break;
+          case 'WeightTooLow':
+            this.errors.push('weightTooLow');
+            break;
+          default:
+            break;
+        }
+
         this.clearForm();
         this.focusFirstFormInput();
       }), _ => {
         this.prices[calculator.id] = 0;
+        this.errors.push('generic');
       });
     });
   }

@@ -1,11 +1,19 @@
-.center{
+.center {
     width: 50%;
     margin: 10px auto;
   }
   
-.main-div{
+.main-div {
     height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.warning {
+  color: orange;
+}
+
+.error {
+  color: red;
 }
